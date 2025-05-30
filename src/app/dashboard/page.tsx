@@ -1,13 +1,12 @@
-// src/app/dashboard/page.tsx
-import { getServerSession } from 'next-auth'
-import { authConfig } from '@/lib/auth/config'
+// 📁 src/app/dashboard/page.tsx
+import { auth } from '@/lib/auth/config'
 import { redirect } from 'next/navigation'
 import connectDB from '@/lib/mongodb/connection'
 import { UserModel } from '@/lib/mongodb/models'
 
 export default async function DashboardPage() {
   // Vérifier l'authentification
-  const session = await getServerSession(authConfig)
+  const session = await auth()
   
   if (!session?.user?.id) {
     redirect('/login')

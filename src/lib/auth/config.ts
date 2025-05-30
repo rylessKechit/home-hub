@@ -1,15 +1,15 @@
-// src/lib/auth/config.ts
-import { NextAuthOptions } from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
-import GoogleProvider from 'next-auth/providers/google'
+// 📁 src/lib/auth/config.ts - Version corrigée
+import NextAuth from 'next-auth'
+import Google from 'next-auth/providers/google'
+import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import connectDB from '@/lib/mongodb/connection'
 import { UserModel } from '@/lib/mongodb/models'
 
-export const authConfig: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    // Provider Google OAuth (recommandé pour PME)
-    GoogleProvider({
+    // Provider Google OAuth
+    Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
@@ -19,31 +19,34 @@ export const authConfig: NextAuthOptions = {
       },
     }),
 
-    // Provider Email/Password (pour ceux qui préfèrent)
-    CredentialsProvider({
+    // Provider Email/Password
+    Credentials({
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Mot de passe', type: 'password' },
       },
-      async authorize(credentials) {
+      authorize: async (credentials) => {
         if (!credentials?.email || !credentials?.password) {
           return null
         }
 
         await connectDB()
 
-        // Chercher l'utilisateur
+        // ✅ CORRECTION 1: Typage correct pour credentials
         const user = await UserModel.findOne({ 
-          email: credentials.email.toLowerCase() 
+          email: (credentials.email as string).toLowerCase() 
         })
 
         if (!user || !(user as any).password) {
           return null
         }
 
-        // Vérifier le mot de passe
-        const isValid = await bcrypt.compare(credentials.password, (user as any).password)
+        // ✅ CORRECTION 2: Typage correct pour password
+        const isValid = await bcrypt.compare(
+          credentials.password as string, 
+          (user as any).password
+        )
         
         if (!isValid) {
           return null
@@ -128,7 +131,7 @@ export const authConfig: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 
   debug: process.env.NODE_ENV === 'development',
-}
+})
 
 // Helper pour créer un utilisateur avec mot de passe
 export async function createUserWithPassword(
@@ -166,7 +169,7 @@ export async function createUserWithPassword(
   }
 }
 
-// Types pour étendre NextAuth
+// ✅ CORRECTION 3: Types corrects pour NextAuth v5
 declare module 'next-auth' {
   interface User {
     id: string
@@ -181,14 +184,5 @@ declare module 'next-auth' {
       plan: string
     }
     googleAccessToken?: string
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string
-    plan: string
-    googleAccessToken?: string
-    googleRefreshToken?: string
   }
 }

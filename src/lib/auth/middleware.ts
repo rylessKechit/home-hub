@@ -1,6 +1,6 @@
-import { getServerSession } from 'next-auth/next'
+// 📁 src/lib/auth/middleware.ts
+import { auth } from './config'
 import { NextRequest, NextResponse } from 'next/server'
-import { authConfig } from './config'
 import connectDB from '@/lib/mongodb/connection'
 import { UserModel } from '@/lib/mongodb/models'
 
@@ -10,7 +10,7 @@ export async function withAuth(
 ) {
   return async (req: NextRequest) => {
     try {
-      const session = await getServerSession(authConfig)
+      const session = await auth()
       
       if (!session?.user || !(session.user as any).id) {
         return NextResponse.json(
@@ -53,7 +53,7 @@ export async function withAuth(
 }
 
 export async function requireAuth() {
-  const session = await getServerSession(authConfig)
+  const session = await auth()
   
   if (!session?.user || !(session.user as any).id) {
     return null

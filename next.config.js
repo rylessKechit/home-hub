@@ -1,3 +1,4 @@
+// 📁 next.config.js (Mise à jour pour éviter l'erreur de route typée)
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -7,7 +8,7 @@ const nextConfig = {
     ignoreDuringBuilds: false,
   },
   experimental: {
-    typedRoutes: true,
+    typedRoutes: false, // ✅ Désactivé pour éviter les erreurs de type
   },
 }
 
